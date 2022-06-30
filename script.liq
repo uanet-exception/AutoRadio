@@ -2,6 +2,10 @@
 # Allow root
 settings.init.allow_root.set(true)
 
+settings.server.telnet.set(true)
+settings.server.telnet.port.set(1234)
+settings.server.telnet.bind_addr.set("0.0.0.0")
+
 # Set environments if empty
 if getenv("ICECAST_SOURCE_PASSWORD") == "" then
     setenv("ICECAST_SOURCE_PASSWORD", "hackme")
@@ -48,6 +52,7 @@ output.icecast(
     mount=getenv("STREAM_MOUNTPOINT"),
     password=getenv("ICECAST_SOURCE_PASSWORD"),
     host="icecast",
+    genre=getenv("STREAM_GENRE"),
     port=8000,
     encoding="UTF-8",
     radio
