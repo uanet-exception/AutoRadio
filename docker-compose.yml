@@ -5,7 +5,7 @@ services:
     image: "mkody/icecast"
     restart: always
     ports:
-      - "${ICECAST_PORT:-8000}:8000"
+      - "127.0.0.1:${ICECAST_PORT:-8000}:8000"
     environment:
       - ICECAST_SOURCE_PASSWORD
       - ICECAST_ADMIN_PASSWORD
@@ -17,15 +17,21 @@ services:
       - ./logs:/var/log/icecast
 
   liquidsoap:
-    image: "savonet/liquidsoap:v2.0.1"
+    image: "savonet/liquidsoap:v2.1.0"
     restart: always
     command: ["/script.liq"]
+    ports:
+      - "127.0.0.1:${TELNET_PORT:-1234}:1234"
+      - "8888:8888"
     environment:
       - ICECAST_SOURCE_PASSWORD
       - STREAM_NAME
       - STREAM_DESC
       - STREAM_URL
       - STREAM_MOUNTPOINT
+      - DJ_USERNAME
+      - DJ_PASSWORD
+      - DJ_MOUNTPOINT
     depends_on:
       - icecast
     volumes:
