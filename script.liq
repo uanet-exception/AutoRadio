@@ -6,6 +6,7 @@ settings.server.telnet.set(true)
 settings.server.telnet.port.set(1234)
 settings.server.telnet.bind_addr.set("0.0.0.0")
 settings.harbor.bind_addrs.set(["0.0.0.0"])
+# settings.log.level.set(4)
 
 # Set environments if empty
 if getenv("ICECAST_SOURCE_PASSWORD") == "" then
@@ -30,14 +31,42 @@ if getenv("DJ_MOUNTPOINT") == "" then
     setenv("DJ_MOUNTPOINT", "/dj-on-air-live")
 end
 
-live = input.harbor(getenv("DJ_MOUNTPOINT"), icy=true, replay_metadata=true, max=2048., port=8888, buffer=0.0, user=getenv("DJ_USERNAME"), password=getenv("DJ_PASSWORD"))
-def append_title(m) =
-  [("title","Live DJ Connected")]
-end
-live = map_metadata(append_title, live)
+headers = ref([])
 
-# Playlist
-i_playlist = crossfade(
+def on_connect(new_headers) =
+    headers := new_headers
+end
+
+def add_dj_metadata(metadata) =
+    headers = !headers
+    name = headers["Ice-Name"]
+    desc = headers["Ice-Description"]
+
+    if (name != "" and desc != "") then
+        list.add(("title", "#{name} (#{desc})"), metadata)
+    elsif (name != "") then
+        list.add(("title", "#{name}"), metadata)
+    elsif (desc != "") then
+        list.add(("title", "#{desc}"), metadata)
+    else
+        list.add(("title", "Live DJ Connected"), metadata)
+    end
+end
+
+live = input.harbor(
+    getenv("DJ_MOUNTPOINT"),
+    icy=true,
+    replay_metadata=true,
+    max=2048.,
+    port=8888,
+    buffer=0.0,
+    on_connect=on_connect,
+    user=getenv("DJ_USERNAME"),
+    password=getenv("DJ_PASSWORD")
+)
+live = map_metadata(add_dj_metadata, live)
+
+autodj = crossfade(
     duration=3.0,
     smart=true,
     blank.eat(
@@ -53,7 +82,7 @@ i_playlist = crossfade(
     )
 )
 
-radio = mksafe(fallback(track_sensitive=false, [live, i_playlist]))
+radio = mksafe(fallback(track_sensitive=false, [live, autodj]))
 
 # Output
 output.icecast(
