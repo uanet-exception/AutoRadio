@@ -12,6 +12,9 @@ settings.harbor.bind_addrs.set(["0.0.0.0"])
 if getenv("ICECAST_SOURCE_PASSWORD") == "" then
     setenv("ICECAST_SOURCE_PASSWORD", "hackme")
 end
+if getenv("ICECAST_STREAM_BITRATE") == "" then
+    setenv("ICECAST_STREAM_BITRATE", "128")
+end
 if getenv("STREAM_NAME") == "" then
     setenv("STREAM_NAME", "Radio")
 end
@@ -87,7 +90,7 @@ radio = mksafe(fallback(track_sensitive=false, [live, autodj]))
 # Output
 output.icecast(
     %mp3(
-        bitrate=128,
+        bitrate=int_of_string(getenv("ICECAST_STREAM_BITRATE")),
         id3v2=true
     ),
     name=getenv("STREAM_NAME"),
